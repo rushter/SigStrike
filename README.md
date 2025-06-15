@@ -9,7 +9,7 @@ The library tries to match the output of `dissect.cobaltstrike` so it can be use
 
 # Installation
 
-## Using Cargo
+## Rust CLI using Cargo
 
 ```bash
 cargo install sigstrike
