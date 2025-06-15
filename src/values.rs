@@ -140,7 +140,7 @@ impl<'a> SliceConverter<'a> {
                     Ok(len) => len as usize,
                     Err(_) => return Err("Failed to read FrameHeader length"),
                 };
-                if length == 0 || length > self.bytes.len() - 8 {
+                if length == 0 || length > self.bytes.len().saturating_sub(8) {
                     return Err("Invalid FrameHeader length");
                 }
                 let mut header = vec![0u8; length];
