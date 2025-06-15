@@ -31,7 +31,6 @@ futures = "0.3.31"
 rand = "0.9.1"
 url = "2.5.0"
 indicatif = "0.17.7"
-libc = "0.2.172"
 pyo3 = { version = "0.25.1", features = ["extension-module", "auto-initialize"], optional = true }
 hex = "0.4.3"
 
