@@ -48,6 +48,7 @@ pub fn process_files(file_paths: Vec<String>, output_path: Option<PathBuf>) -> s
         info!("Processing file: {}", file);
         match read_file(file) {
             Ok(beacon) => {
+                info!("Successfully read beacon from file: {} {}", file, &beacon.input_hash.clone().unwrap());
                 let json = serde_json::to_string(&beacon)?;
                 file_out.write_all(json.as_bytes())?;
                 file_out.write_all(b"\n")?;

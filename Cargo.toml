@@ -35,6 +35,8 @@ libc = "0.2.172"
 pyo3 = { version = "0.25.1", features = ["extension-module", "auto-initialize"], optional = true }
 hex = "0.4.3"
 
+[dev-dependencies]
+zip = "4.1.0"
 
 [lib]
 name = "sigstrike"
