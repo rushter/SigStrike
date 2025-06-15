@@ -32,19 +32,19 @@ sigstrike --help
 ### Parsing a single file
 
 ```bash
- sigstrike process --input-path beacon.bin --output-path beacon.json
+sigstrike process --input-path beacon.bin --output-path beacon.json
 ```
 
 ### Parsing multiple files in a directory
 
 ```bash
-    sigstrike process --input-path /path/to/beacons/ --output-path beacons.json
+sigstrike process --input-path /path/to/beacons/ --output-path beacons.json
 ```
 
 ## Scanning URLs
 
 ```bash
-  sigstrike crawl --input-path urls.txt --output-path beacons.json   --max-concurrent 1000
+sigstrike crawl --input-path urls.txt --output-path beacons.json   --max-concurrent 1000
 ```
 
 ## Using with Python
