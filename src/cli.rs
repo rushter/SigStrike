@@ -1,7 +1,7 @@
 use crate::io::{list_files, process_files};
 use clap::{Parser, Subcommand};
 use env_logger::Env;
-use log::{debug, error, info};
+use log::{error, info};
 use std::path::PathBuf;
 use std::time::Instant;
 

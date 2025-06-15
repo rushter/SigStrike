@@ -13,6 +13,3 @@ pub use extract::extract_beacon;
 
 #[cfg(feature = "python")]
 mod py;
-
-#[cfg(feature = "python")]
-pub use py::*;
