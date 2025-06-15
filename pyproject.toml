@@ -3,7 +3,7 @@ name = 'sigstrike'
 version = '0.1.1'
 description = 'Cobalt Strike beacon crawler and parser.'
 readme = 'README.md'
-requires-python = '>=3.8'
+requires-python = '>=3.9'
 license = 'MIT'
 authors = [
     { name = 'Artem Golubin', email = 'me@rushter.com' }

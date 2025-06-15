@@ -17,6 +17,8 @@ cargo install sigstrike
 
 ## Using Python and pip
 
+Requires Python 3.9+.
+
 ```bash
 pip install sigstrike
 ```
