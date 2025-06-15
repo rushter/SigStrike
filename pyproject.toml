@@ -1,0 +1,18 @@
+[project]
+name = 'sigstrike'
+version = '0.1.0'
+description = 'Cobalt Strike beacon crawler and parser.'
+readme = 'README.md'
+requires-python = '>=3.8'
+license = 'MIT'
+authors = [
+    { name = 'Artem Golubin', email = 'me@rushter.com' }
+]
+
+[project.scripts]
+sigstrike = 'sigstrike._sigstrike:run_cli'
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=62.4", "wheel", "setuptools-rust>=1.5.2"]
+

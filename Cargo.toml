@@ -1,0 +1,53 @@
+[package]
+name = "sigstrike"
+version = "0.1.0"
+edition = "2024"
+description = "Cobalt Strike beacon crawler and parser."
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/rushter/SigStrike"
+homepage = "https://github.com/rushter/SigStrike"
+keywords = ["cobalt_strike", "beacon", "crawler", "parser"]
+authors = ["Artem Golubin <me@rushter.com>"]
+rust-version = "1.87.0"
+
+[dependencies]
+log = "0.4.27"
+env_logger = "0.11.8"
+bitflags = "2.9.1"
+num_enum = "0.7.3"
+sha2 = "0.11.0-rc.0"
+byteorder = "1.5.0"
+encoding_rs = "0.8.35"
+encoding_rs_io = "0.1.7"
+memchr = "2.7.4"
+serde_json = "1.0.140"
+serde = { version = "1.0.219", features = ["derive"] }
+walkdir = "2.5.0"
+clap = { version = "4.5.40", features = ["derive"] }
+reqwest = { version = "0.12.20", features = ["stream", "gzip"] }
+tokio = { version = "1.45.1", features = ["full"] }
+futures = "0.3.31"
+rand = "0.9.1"
+url = "2.5.0"
+indicatif = "0.17.7"
+libc = "0.2.172"
+pyo3 = { version = "0.25.1", features = ["extension-module", "auto-initialize"], optional = true }
+hex = "0.4.3"
+
+
+[lib]
+name = "sigstrike"
+crate-type = ["cdylib", "rlib"]
+
+
+[features]
+default = []
+python = [
+    "pyo3",
+]
+
+
+[[bin]]
+name = "sigstrike"
+path = "src/main.rs"
