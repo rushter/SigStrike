@@ -35,7 +35,6 @@ pub fn list_files(path: &str) -> Vec<String> {
     files
 }
 
-
 pub fn process_files(file_paths: Vec<String>, output_path: Option<PathBuf>) -> std::io::Result<()> {
     let mut file_out: Box<dyn Write> = if let Some(output_path) = output_path {
         let file_out = std::fs::File::create(output_path)?;
@@ -48,7 +47,11 @@ pub fn process_files(file_paths: Vec<String>, output_path: Option<PathBuf>) -> s
         info!("Processing file: {}", file);
         match read_file(file) {
             Ok(beacon) => {
-                info!("Successfully read beacon from file: {} {}", file, &beacon.input_hash.clone().unwrap());
+                info!(
+                    "Successfully read beacon from file: {} {}",
+                    file,
+                    &beacon.input_hash.clone().unwrap()
+                );
                 let json = serde_json::to_string(&beacon)?;
                 file_out.write_all(json.as_bytes())?;
                 file_out.write_all(b"\n")?;
@@ -58,5 +61,3 @@ pub fn process_files(file_paths: Vec<String>, output_path: Option<PathBuf>) -> s
     }
     Ok(())
 }
-
-

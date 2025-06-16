@@ -69,7 +69,6 @@ pub fn xor(data: &[u8], key: u8) -> Vec<u8> {
     result
 }
 
-
 pub fn trim_null_terminator(bytes: &[u8]) -> Vec<u8> {
     let mut new_vec = Vec::from(bytes);
     if let Some(pos) = bytes.iter().rposition(|&b| b != 0) {
@@ -142,7 +141,6 @@ pub fn xor_bytes(a: &[u8], b: &[u8]) -> Vec<u8> {
     }
 }
 
-
 fn checksum8(uri: &str, n: i32) -> bool {
     if uri.len() < 4 {
         return false;
@@ -164,7 +162,12 @@ pub fn generate_checksum(n: i32) -> String {
     loop {
         let mut chars: Vec<char> = Vec::new();
         for _ in 0..4 {
-            chars.push(ALPHABET.chars().nth(rng.random_range(0..ALPHABET.len())).unwrap());
+            chars.push(
+                ALPHABET
+                    .chars()
+                    .nth(rng.random_range(0..ALPHABET.len()))
+                    .unwrap(),
+            );
         }
         uri = chars.into_iter().collect();
         if checksum8(&uri, n) {

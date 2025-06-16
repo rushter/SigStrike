@@ -11,7 +11,6 @@ pub struct BeaconBlob {
     pub current_offset: usize,
 }
 
-
 impl BeaconBlob {
     pub fn get_offset(&self) -> &[u8] {
         &self.data[self.current_offset..]
@@ -90,8 +89,3 @@ pub struct SettingsBlock {
     pub length: u16,
     pub value: ValueType,
 }
-
-
-
-
-

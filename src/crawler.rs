@@ -9,14 +9,14 @@ use serde::Serialize;
 use std::error::Error;
 use std::path::PathBuf;
 use std::sync::{
-    atomic::{AtomicUsize, Ordering},
     Arc,
+    atomic::{AtomicUsize, Ordering},
 };
 use std::time::Duration;
 use tokio::{
     fs::{File, OpenOptions},
     io::{self, AsyncBufReadExt, AsyncWriteExt, BufReader},
-    sync::{mpsc, Semaphore},
+    sync::{Semaphore, mpsc},
     task::JoinHandle,
 };
 use url::Url;
@@ -305,10 +305,7 @@ fn finalize_progress_and_print_summary(progress: ProgressTracking) {
         "  Total URLs processed: {}",
         progress.total_count.load(Ordering::Relaxed)
     );
-    println!(
-        "  Found: {}",
-        progress.found_count.load(Ordering::Relaxed)
-    );
+    println!("  Found: {}", progress.found_count.load(Ordering::Relaxed));
     println!(
         "  Failed: {}",
         progress.failed_count.load(Ordering::Relaxed)
@@ -319,7 +316,8 @@ fn finalize_progress_and_print_summary(progress: ProgressTracking) {
     );
     println!(
         "  Unreachable: {}",
-        (progress.failed_count.load(Ordering::Relaxed) - progress.non_matching_count.load(Ordering::Relaxed))
+        (progress.failed_count.load(Ordering::Relaxed)
+            - progress.non_matching_count.load(Ordering::Relaxed))
     );
 }
 

@@ -6,7 +6,6 @@ use std::path::PathBuf;
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
-
 /// extract_beacon(data)
 /// --
 ///
@@ -18,13 +17,17 @@ fn extract_beacon(data: &[u8]) -> PyResult<String> {
     let result = extract::extract_beacon(data);
 
     match result {
-        Ok(value) => {
-            match serde_json::to_string(&value) {
-                Ok(json) => Ok(json),
-                Err(e) => Err(PyValueError::new_err(format!("Error serializing to JSON: {}", e))),
-            }
-        }
-        Err(e) => Err(PyValueError::new_err(format!("Beacon extraction failed: {}", e))),
+        Ok(value) => match serde_json::to_string(&value) {
+            Ok(json) => Ok(json),
+            Err(e) => Err(PyValueError::new_err(format!(
+                "Error serializing to JSON: {}",
+                e
+            ))),
+        },
+        Err(e) => Err(PyValueError::new_err(format!(
+            "Beacon extraction failed: {}",
+            e
+        ))),
     }
 }
 
@@ -42,11 +45,23 @@ fn run_cli() -> PyResult<()> {
 ///
 #[pyfunction]
 #[pyo3(signature = (input_path, output_path, max_concurrent=100, max_retries=2, timeout=10))]
-fn crawl(input_path: String, output_path: String, max_concurrent: usize, max_retries: usize, timeout: u64) -> PyResult<()> {
+fn crawl(
+    input_path: String,
+    output_path: String,
+    max_concurrent: usize,
+    max_retries: usize,
+    timeout: u64,
+) -> PyResult<()> {
     let input_path = PathBuf::from(input_path);
     let output_path = PathBuf::from(output_path);
     let rt = tokio::runtime::Runtime::new().map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
-    let result = rt.block_on(crate::crawler::crawl(&input_path, &output_path, max_concurrent, max_retries, timeout));
+    let result = rt.block_on(crate::crawler::crawl(
+        &input_path,
+        &output_path,
+        max_concurrent,
+        max_retries,
+        timeout,
+    ));
     match result {
         Ok(_) => Ok(()),
         Err(e) => Err(PyRuntimeError::new_err(format!("Crawl failed: {}", e))),

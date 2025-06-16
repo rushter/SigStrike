@@ -3,7 +3,6 @@
 
 use sigstrike::cli::run_cli;
 
-
 #[tokio::main]
 async fn main() {
     run_cli(0).await;

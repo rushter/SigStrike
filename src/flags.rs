@@ -16,10 +16,10 @@ bitflags! {
 }
 
 impl BeaconProtocol {
-    pub fn to_values(&self) -> Vec<String> {
+    pub fn to_values(self) -> Vec<String> {
         // iter_names is not working for some reason
         let mut flag_names: Vec<String> = Vec::new();
-        bitflags_match!(*self, {
+        bitflags_match!(self, {
             BeaconProtocol::HTTP => flag_names.push("HTTP".to_string()),
             BeaconProtocol::DNS => flag_names.push("DNS".to_string()),
             BeaconProtocol::SMB => flag_names.push("SMB".to_string()),
