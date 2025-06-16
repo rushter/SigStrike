@@ -215,6 +215,12 @@ pub fn parse_transform_binary(
             steps.push((name, TransformArgument::Bool(true)));
         } else if argument_steps.contains(&step) {
             let length = cursor.read_u32::<BigEndian>()?;
+            if length > 100 {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Transform argument length exceeds maximum allowed size",
+                ));
+            }
             let mut arg = vec![0u8; length as usize];
             cursor.read_exact(&mut arg)?;
             let arg = bytes_to_string(&arg);
@@ -343,6 +349,9 @@ fn parse_execute_list(data: &[u8]) -> Vec<String> {
 
 fn parse_process_injection_transform_steps(data: &[u8]) -> Vec<(String, TransformArgument)> {
     fn read_arg(cursor: &mut Cursor<&[u8]>, length: u32) -> Result<String, &'static str> {
+        if length > 100 {
+            return Err("Transform argument length exceeds maximum allowed size");
+        };
         let mut arg = vec![0u8; length as usize];
         if cursor.read_exact(&mut arg).is_err() {
             return Err("Failed to read transform argument data");
