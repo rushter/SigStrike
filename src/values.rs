@@ -310,6 +310,10 @@ fn parse_execute_list(data: &[u8]) -> Vec<String> {
                     continue;
                 }
             };
+            if length == 0 || length > data.len() - cursor.position() as usize {
+                error!("Invalid module name length: {length}");
+                continue;
+            }
             let module_bytes =
                 &data[cursor.position() as usize..cursor.position() as usize + length];
             cursor.set_position(cursor.position() + length as u64);
