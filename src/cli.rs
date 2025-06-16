@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use std::time::Instant;
 
 #[cfg(any(target_os = "linux", target_os = "macos"))]
-use libc::{rlimit, setrlimit, RLIMIT_NOFILE};
+use libc::{RLIMIT_NOFILE, rlimit, setrlimit};
 
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 fn set_nofile_limit(soft: u64, hard: u64) -> Result<(), String> {
@@ -21,7 +21,6 @@ fn set_nofile_limit(soft: u64, hard: u64) -> Result<(), String> {
         Err(std::io::Error::last_os_error().to_string())
     }
 }
-
 
 #[derive(Parser)]
 #[command(name = "sigstrike")]
@@ -42,7 +41,10 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     Process {
-        #[arg(long, help = "Input path to a file or directory containing Cobalt Strike beacons.")]
+        #[arg(
+            long,
+            help = "Input path to a file or directory containing Cobalt Strike beacons."
+        )]
         input_path: PathBuf,
 
         #[arg(
@@ -50,7 +52,6 @@ enum Commands {
             help = "Output path for results. If not specified, results will be printed to stdout."
         )]
         output_path: Option<PathBuf>,
-
     },
     Crawl {
         #[arg(long, help = "Path to input file containing URLs")]
@@ -78,10 +79,8 @@ enum Commands {
     },
 }
 
-
 pub fn parse_beacons(input_path: PathBuf, output_path: Option<PathBuf>) {
     let input_str_path = input_path.display().to_string();
-
 
     if input_path.is_file() {
         let files: Vec<String> = Vec::from([input_str_path.clone()]);
@@ -90,15 +89,25 @@ pub fn parse_beacons(input_path: PathBuf, output_path: Option<PathBuf>) {
         }
     } else if input_path.is_dir() {
         let files = list_files(&input_str_path);
-        info!("Found {} files in directory: {}", files.len(), &input_str_path);
+        info!(
+            "Found {} files in directory: {}",
+            files.len(),
+            &input_str_path
+        );
         if files.is_empty() {
             error!("No files found in directory: {input_str_path}");
         }
         if let Err(e) = process_files(files, output_path) {
-            error!("Error processing files in directory {}: {}", &input_str_path, e);
+            error!(
+                "Error processing files in directory {}: {}",
+                &input_str_path, e
+            );
         }
     } else {
-        error!("Input path is neither a file nor a directory: {}", &input_str_path);
+        error!(
+            "Input path is neither a file nor a directory: {}",
+            &input_str_path
+        );
     };
 }
 
@@ -120,19 +129,23 @@ pub async fn run_cli(start_arg: usize) {
             input_path,
             output_path,
         } => {
-            parse_beacons(
-                input_path,
-                output_path,
-            );
+            parse_beacons(input_path, output_path);
         }
         Commands::Crawl {
             input_path,
             output_path,
             max_concurrent,
             max_retries,
-            timeout
+            timeout,
         } => {
-            let crawl_result = crate::crawler::crawl(&input_path, &output_path, max_concurrent, max_retries, timeout).await;
+            let crawl_result = crate::crawler::crawl(
+                &input_path,
+                &output_path,
+                max_concurrent,
+                max_retries,
+                timeout,
+            )
+            .await;
             if let Err(e) = crawl_result {
                 error!("Error running crawler: {e}");
             }

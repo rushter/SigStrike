@@ -204,8 +204,12 @@ fn iter_guardrail_configs(data: &[u8], xor_key: u8) -> Vec<GuardrailMetadata> {
             let beacon_config_offset = guard_config_offset.saturating_sub(BEACON_CONFIG_PATCH_SIZE);
 
             if beacon_config_offset + BEACON_CONFIG_PATCH_SIZE + GUARD_PATCH_SIZE <= data.len() {
-                let masked_beacon_config = data[beacon_config_offset..beacon_config_offset + BEACON_CONFIG_PATCH_SIZE].to_vec();
-                let masked_guard_config = data[beacon_config_offset + BEACON_CONFIG_PATCH_SIZE..beacon_config_offset + BEACON_CONFIG_PATCH_SIZE + GUARD_PATCH_SIZE].to_vec();
+                let masked_beacon_config = data
+                    [beacon_config_offset..beacon_config_offset + BEACON_CONFIG_PATCH_SIZE]
+                    .to_vec();
+                let masked_guard_config = data[beacon_config_offset + BEACON_CONFIG_PATCH_SIZE
+                    ..beacon_config_offset + BEACON_CONFIG_PATCH_SIZE + GUARD_PATCH_SIZE]
+                    .to_vec();
 
                 let mut beacon_config_reversed = masked_beacon_config.clone();
                 beacon_config_reversed.reverse();
@@ -217,11 +221,15 @@ fn iter_guardrail_configs(data: &[u8], xor_key: u8) -> Vec<GuardrailMetadata> {
                 let mut parse_offset = 0;
 
                 while parse_offset + 2 <= unmasked_guard_config.len() {
-                    if unmasked_guard_config[parse_offset] == 0 && unmasked_guard_config[parse_offset + 1] == 0 {
+                    if unmasked_guard_config[parse_offset] == 0
+                        && unmasked_guard_config[parse_offset + 1] == 0
+                    {
                         break;
                     }
 
-                    if let Some(setting) = GuardrailSetting::parse(&unmasked_guard_config, &mut parse_offset) {
+                    if let Some(setting) =
+                        GuardrailSetting::parse(&unmasked_guard_config, &mut parse_offset)
+                    {
                         if setting.option == GuardOption::PayloadChecksum {
                             checksum = u32_from_be_bytes(&setting.value);
                             debug!("GuardPayloadChecksum = 0x{checksum:08x}");
@@ -246,7 +254,8 @@ fn iter_guardrail_configs(data: &[u8], xor_key: u8) -> Vec<GuardrailMetadata> {
 
 fn iter_guardrail_configs_with_beacon(data: &[u8]) -> Option<GuardrailResult> {
     for grconfig in iter_guardrail_configs(data, 0x8a) {
-        let guarded_config = utils::xor_single_byte(&grconfig.masked_beacon_config, grconfig.beacon_xor_key);
+        let guarded_config =
+            utils::xor_single_byte(&grconfig.masked_beacon_config, grconfig.beacon_xor_key);
 
         for xorkey in XorKeyCandidateIterator::new(&guarded_config) {
             let unguarded = utils::xor_bytes(&guarded_config, &xorkey);
@@ -254,7 +263,10 @@ fn iter_guardrail_configs_with_beacon(data: &[u8]) -> Option<GuardrailResult> {
 
             if grconfig.checksum == checksum {
                 let xor_string = String::from_utf8_lossy(&xorkey);
-                debug!("payload checksum: 0x{:08x} for xorkey: {:02x?}", checksum, &xor_string);
+                debug!(
+                    "payload checksum: 0x{:08x} for xorkey: {:02x?}",
+                    checksum, &xor_string
+                );
                 return Some(GuardrailResult {
                     beacon_data: unguarded,
                     xor_key: xor_string.to_string(),
@@ -264,7 +276,6 @@ fn iter_guardrail_configs_with_beacon(data: &[u8]) -> Option<GuardrailResult> {
     }
     None
 }
-
 
 fn search_guardrail_config(data: &[u8]) -> Option<ParsedBeacon> {
     if let Some(result) = iter_guardrail_configs_with_beacon(data) {
