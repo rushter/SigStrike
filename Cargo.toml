@@ -34,6 +34,9 @@ indicatif = "0.17.7"
 pyo3 = { version = "0.25.1", features = ["extension-module"], optional = true }
 hex = "0.4.3"
 
+[target.'cfg(not(windows))'.dependencies]
+libc = "0.2.151"
+
 [dev-dependencies]
 zip = "4.1.0"
 
@@ -52,3 +55,4 @@ python = [
 [[bin]]
 name = "sigstrike"
 path = "src/main.rs"
+

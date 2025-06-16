@@ -1,9 +1,26 @@
 use crate::io::{list_files, process_files};
 use clap::{Parser, Subcommand};
 use env_logger::Env;
-use log::{error, info};
+use log::{debug, error, info};
 use std::path::PathBuf;
 use std::time::Instant;
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+use libc::{rlimit, setrlimit, RLIMIT_NOFILE};
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn set_nofile_limit(soft: u64, hard: u64) -> Result<(), String> {
+    let lim = rlimit {
+        rlim_cur: soft,
+        rlim_max: hard,
+    };
+    let res = unsafe { setrlimit(RLIMIT_NOFILE, &lim) };
+    if res == 0 {
+        Ok(())
+    } else {
+        Err(std::io::Error::last_os_error().to_string())
+    }
+}
 
 
 #[derive(Parser)]
@@ -92,6 +109,11 @@ pub async fn run_cli(start_arg: usize) {
     let env = Env::default().default_filter_or(cli.logging_level);
     env_logger::Builder::from_env(env).init();
 
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    match set_nofile_limit(65535, 65535) {
+        Ok(()) => debug!("File limit set"),
+        Err(e) => error!("Failed to set limit: {e}"),
+    }
 
     match cli.command {
         Commands::Process {
