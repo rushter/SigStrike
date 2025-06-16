@@ -23,6 +23,7 @@ use url::Url;
 
 // Maximum response size allowed (1MB)
 const MAX_RESPONSE_SIZE: u64 = 1024 * 1024;
+const MAX_REDIRECTS: usize = 3;
 
 #[derive(Serialize)]
 struct CrawlResult {
@@ -89,6 +90,7 @@ fn setup_crawl_config(max_concurrent: usize, max_retries: usize, timeout: u64) -
             .timeout(Duration::from_secs(timeout))
             .danger_accept_invalid_certs(true)
             .danger_accept_invalid_hostnames(true)
+            .redirect(reqwest::redirect::Policy::limited(MAX_REDIRECTS))
             .build()
             .unwrap(),
     );
