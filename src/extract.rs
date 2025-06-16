@@ -1,7 +1,9 @@
 use crate::config::BeaconBlob;
 use crate::datamodel::{ParsedBeacon, ParsedBeaconItems};
 use crate::guardrails::find_guardrail_config;
-use crate::utils::{get_most_common_xor_keys, hash_bytes, needle_in_haystack, order_offsets, xor, DEFAULT_XOR_KEYS};
+use crate::utils::{
+    DEFAULT_XOR_KEYS, get_most_common_xor_keys, hash_bytes, needle_in_haystack, order_offsets, xor,
+};
 use log::{debug, info};
 use std::io::Error;
 
@@ -177,7 +179,7 @@ pub fn extract_beacon(data: &[u8]) -> std::io::Result<ParsedBeacon> {
             parsed_beacon.input_hash = Some(hash_bytes(data));
             Ok(parsed_beacon)
         }
-        Err(e) => Err(e)
+        Err(e) => Err(e),
     }
 }
 

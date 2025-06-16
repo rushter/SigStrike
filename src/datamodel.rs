@@ -12,7 +12,6 @@ pub enum SettingsType {
     Ptr = 3,
 }
 
-
 #[derive(Debug, TryFromPrimitive, PartialEq, Eq)]
 #[repr(u32)]
 pub enum TransformStep {
@@ -54,10 +53,10 @@ impl TransformStep {
             TransformStep::StrRep => "STRREP",
             TransformStep::Mask => "MASK",
             TransformStep::HostHeader_ => "_HOSTHEADER",
-        }.to_string()
+        }
+        .to_string()
     }
 }
-
 
 #[derive(Debug, TryFromPrimitive, Eq, PartialEq, Hash, Serialize)]
 #[repr(u16)]
@@ -294,7 +293,6 @@ pub enum BeaconSetting {
 
     #[serde(rename = "SETTING_BEACON_GATE")]
     SettingBeaconGate = 78,
-
 }
 
 #[derive(Debug, TryFromPrimitive, PartialEq)]
@@ -321,10 +319,10 @@ impl InjectExecutor {
             InjectExecutor::CreateThread_ => "CreateThread_",
             InjectExecutor::CreateRemoteThread_ => "CreateRemoteThread_",
             InjectExecutor::NtQueueApcThreadS => "NtQueueApcThread_s",
-        }.to_string()
+        }
+        .to_string()
     }
 }
-
 
 #[derive(Debug, TryFromPrimitive, PartialEq)]
 #[repr(u16)]
@@ -340,7 +338,8 @@ impl BofAllocator {
             BofAllocator::VirtualAlloc => "VirtualAlloc",
             BofAllocator::MapViewOfFile => "MapViewOfFile",
             BofAllocator::HeapAlloc => "HeapAlloc",
-        }.to_string()
+        }
+        .to_string()
     }
 }
 
