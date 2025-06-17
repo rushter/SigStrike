@@ -242,6 +242,7 @@ async fn process_urls(
     progress: ProgressTracking,
 ) {
     let mut tasks = FuturesUnordered::new();
+    let mut pending_urls = Vec::new();
     let mut url_stream_finished = false;
 
     loop {
@@ -250,16 +251,7 @@ async fn process_urls(
             url_result = rx.recv(), if !url_stream_finished => {
                 match url_result {
                     Some(url) => {
-                        let permit = config.semaphore.clone().acquire_owned().await.unwrap();
-                        let client = config.client.clone();
-                        let output = output_writer.clone();
-                        let progress_clone = progress.clone();
-                        let max_retries = config.max_retries;
-
-                        tasks.push(tokio::spawn(async move {
-                            let _permit = permit;
-                            process_single_url(&client, &url, max_retries, output, progress_clone).await;
-                        }));
+                        pending_urls.push(url);
                     }
                     None => {
                         url_stream_finished = true;
@@ -272,6 +264,24 @@ async fn process_urls(
             }
             // Exit when no more URLs and no pending tasks
             else => break,
+        }
+
+        // Try to spawn tasks from pending URLs (non-blocking)
+        while !pending_urls.is_empty() {
+            if let Ok(permit) = config.semaphore.clone().try_acquire_owned() {
+                let url = pending_urls.remove(0);
+                let client = config.client.clone();
+                let output = output_writer.clone();
+                let progress_clone = progress.clone();
+                let max_retries = config.max_retries;
+
+                tasks.push(tokio::spawn(async move {
+                    let _permit = permit;
+                    process_single_url(&client, &url, max_retries, output, progress_clone).await;
+                }));
+            } else {
+                break; // No permits available, wait for tasks to complete
+            }
         }
     }
 }
