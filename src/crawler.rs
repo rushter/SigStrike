@@ -9,14 +9,14 @@ use serde::Serialize;
 use std::error::Error;
 use std::path::PathBuf;
 use std::sync::{
-    Arc,
     atomic::{AtomicUsize, Ordering},
+    Arc,
 };
 use std::time::Duration;
 use tokio::{
     fs::{File, OpenOptions},
     io::{self, AsyncBufReadExt, AsyncWriteExt, BufReader},
-    sync::{Semaphore, mpsc},
+    sync::{mpsc, Semaphore},
     task::JoinHandle,
 };
 use url::Url;
@@ -24,6 +24,7 @@ use url::Url;
 // Maximum response size allowed (1MB)
 const MAX_RESPONSE_SIZE: u64 = 1024 * 1024;
 const MAX_REDIRECTS: usize = 3;
+const USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36";
 
 #[derive(Serialize)]
 struct CrawlResult {
@@ -96,6 +97,7 @@ fn setup_crawl_config(max_concurrent: usize, max_retries: usize, timeout: u64) -
             .tcp_keepalive(None)
             .pool_idle_timeout(Duration::from_secs(0))
             .redirect(reqwest::redirect::Policy::limited(MAX_REDIRECTS))
+            .user_agent(USER_AGENT)
             .build()
             .unwrap(),
     );
@@ -209,12 +211,12 @@ async fn spawn_url_producer(
             match Url::parse(&line) {
                 Ok(mut url) => {
                     // x86 checksum
-                    let checksum = generate_checksum(92);
-                    url.set_path(&checksum);
-                    let url_to_send = url.to_string();
-                    if tx.send(url_to_send.clone()).await.is_err() {
-                        break;
-                    }
+                    // let checksum = generate_checksum(92);
+                    // url.set_path(&checksum);
+                    // let url_to_send = url.to_string();
+                    // if tx.send(url_to_send.clone()).await.is_err() {
+                    //     break;
+                    // }
                     // x64 checksum
                     let checksum = generate_checksum(93);
                     url.set_path(&checksum);
