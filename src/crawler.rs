@@ -61,10 +61,8 @@ pub async fn crawl(
 ) -> io::Result<()> {
     let config = setup_crawl_config(max_concurrent, max_retries, timeout);
 
-    // Count total lines first
     let total_lines = count_lines_in_file(input_path).await?;
-    // x2 for x86 and x64 checksums
-    let progress = setup_progress_tracking(total_lines * 2);
+    let progress = setup_progress_tracking(total_lines);
     let output_writer = setup_output_writer(output_path).await?;
 
     let (shutdown_tx, shutdown_rx) = mpsc::channel::<()>(1);
@@ -346,9 +344,10 @@ async fn fetch_and_process(
                     .and_then(|ct| ct.to_str().ok())
                     .map(String::from);
 
-                if !(status == StatusCode::OK
-                    && content_type.as_deref() == Some("application/octet-stream"))
+                if status != StatusCode::OK
                 {
+                    // We could also check for content type, but some endpoints return application/json instead
+                    // of application/octet-stream.
                     non_matching_count.fetch_add(1, Ordering::Relaxed);
                     return None;
                 }
