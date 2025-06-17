@@ -9,14 +9,14 @@ use serde::Serialize;
 use std::error::Error;
 use std::path::PathBuf;
 use std::sync::{
-    atomic::{AtomicUsize, Ordering},
     Arc,
+    atomic::{AtomicUsize, Ordering},
 };
 use std::time::Duration;
 use tokio::{
     fs::{File, OpenOptions},
     io::{self, AsyncBufReadExt, AsyncWriteExt, BufReader},
-    sync::{mpsc, Semaphore},
+    sync::{Semaphore, mpsc},
     task::JoinHandle,
 };
 use url::Url;
@@ -242,11 +242,13 @@ async fn process_urls(
     progress: ProgressTracking,
 ) {
     let mut tasks = FuturesUnordered::new();
+    let mut url_stream_finished = false;
 
     loop {
         tokio::select! {
-            url = rx.recv() => {
-                match url {
+            // Try to receive a new URL
+            url_result = rx.recv(), if !url_stream_finished => {
+                match url_result {
                     Some(url) => {
                         let permit = config.semaphore.clone().acquire_owned().await.unwrap();
                         let client = config.client.clone();
@@ -260,17 +262,18 @@ async fn process_urls(
                         }));
                     }
                     None => {
-                        // Channel closed, no more URLs
-                        break;
+                        url_stream_finished = true;
                     }
                 }
             }
+            // Process completed tasks
             _ = tasks.next(), if !tasks.is_empty() => {
+                // Task completed, continue processing
             }
+            // Exit when no more URLs and no pending tasks
+            else => break,
         }
     }
-
-    while tasks.next().await.is_some() {}
 }
 
 async fn process_single_url(
