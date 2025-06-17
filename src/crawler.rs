@@ -243,17 +243,31 @@ async fn process_urls(
 ) {
     let mut tasks = FuturesUnordered::new();
 
-    while let Some(url) = rx.recv().await {
-        let permit = config.semaphore.clone().acquire_owned().await.unwrap();
-        let client = config.client.clone();
-        let output = output_writer.clone();
-        let progress_clone = progress.clone();
-        let max_retries = config.max_retries;
+    loop {
+        tokio::select! {
+            url = rx.recv() => {
+                match url {
+                    Some(url) => {
+                        let permit = config.semaphore.clone().acquire_owned().await.unwrap();
+                        let client = config.client.clone();
+                        let output = output_writer.clone();
+                        let progress_clone = progress.clone();
+                        let max_retries = config.max_retries;
 
-        tasks.push(tokio::spawn(async move {
-            let _permit = permit;
-            process_single_url(&client, &url, max_retries, output, progress_clone).await;
-        }));
+                        tasks.push(tokio::spawn(async move {
+                            let _permit = permit;
+                            process_single_url(&client, &url, max_retries, output, progress_clone).await;
+                        }));
+                    }
+                    None => {
+                        // Channel closed, no more URLs
+                        break;
+                    }
+                }
+            }
+            _ = tasks.next(), if !tasks.is_empty() => {
+            }
+        }
     }
 
     while tasks.next().await.is_some() {}
@@ -344,8 +358,7 @@ async fn fetch_and_process(
                     .and_then(|ct| ct.to_str().ok())
                     .map(String::from);
 
-                if status != StatusCode::OK
-                {
+                if status != StatusCode::OK {
                     // We could also check for content type, but some endpoints return application/json instead
                     // of application/octet-stream.
                     non_matching_count.fetch_add(1, Ordering::Relaxed);
