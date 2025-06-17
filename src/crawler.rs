@@ -69,7 +69,8 @@ pub async fn crawl(
     let (shutdown_tx, shutdown_rx) = mpsc::channel::<()>(1);
     let progress_handle = spawn_progress_updater(progress.clone(), shutdown_rx);
 
-    let (tx, rx) = mpsc::channel::<String>(max_concurrent * 4);
+    let buffer_size = (max_concurrent * 4).min(10_000);
+    let (tx, rx) = mpsc::channel::<String>(buffer_size);
 
     let producer_handle = spawn_url_producer(input_path, tx).await?;
 
@@ -90,6 +91,10 @@ fn setup_crawl_config(max_concurrent: usize, max_retries: usize, timeout: u64) -
             .timeout(Duration::from_secs(timeout))
             .danger_accept_invalid_certs(true)
             .danger_accept_invalid_hostnames(true)
+            .http2_keep_alive_while_idle(false)
+            .pool_max_idle_per_host(0)
+            .tcp_keepalive(None)
+            .pool_idle_timeout(Duration::from_secs(0))
             .redirect(reqwest::redirect::Policy::limited(MAX_REDIRECTS))
             .build()
             .unwrap(),
