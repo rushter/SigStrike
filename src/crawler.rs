@@ -6,17 +6,18 @@ use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use log::{debug, error};
 use reqwest::{Client, StatusCode};
 use serde::Serialize;
+use std::collections::VecDeque;
 use std::error::Error;
 use std::path::PathBuf;
 use std::sync::{
-    Arc,
     atomic::{AtomicUsize, Ordering},
+    Arc,
 };
 use std::time::Duration;
 use tokio::{
     fs::{File, OpenOptions},
     io::{self, AsyncBufReadExt, AsyncWriteExt, BufReader},
-    sync::{Semaphore, mpsc},
+    sync::{mpsc, Semaphore},
     task::JoinHandle,
 };
 use url::Url;
@@ -68,7 +69,7 @@ pub async fn crawl(
     let (shutdown_tx, shutdown_rx) = mpsc::channel::<()>(1);
     let progress_handle = spawn_progress_updater(progress.clone(), shutdown_rx);
 
-    let buffer_size = (max_concurrent * 4).min(10_000);
+    let buffer_size = (max_concurrent * 2).min(30_000);
     let (tx, rx) = mpsc::channel::<String>(buffer_size);
 
     let producer_handle = spawn_url_producer(input_path, tx).await?;
@@ -242,7 +243,7 @@ async fn process_urls(
     progress: ProgressTracking,
 ) {
     let mut tasks = FuturesUnordered::new();
-    let mut pending_urls = Vec::new();
+    let mut pending_urls = VecDeque::new();
     let mut url_stream_finished = false;
 
     loop {
@@ -251,7 +252,7 @@ async fn process_urls(
             url_result = rx.recv(), if !url_stream_finished => {
                 match url_result {
                     Some(url) => {
-                        pending_urls.push(url);
+                        pending_urls.push_back(url);
                     }
                     None => {
                         url_stream_finished = true;
@@ -263,13 +264,17 @@ async fn process_urls(
                 // Task completed, continue processing
             }
             // Exit when no more URLs and no pending tasks
-            else => break,
+            else => {
+                if pending_urls.is_empty() {
+                    break;
+                }
+            }
         }
 
         // Try to spawn tasks from pending URLs (non-blocking)
         while !pending_urls.is_empty() {
             if let Ok(permit) = config.semaphore.clone().try_acquire_owned() {
-                let url = pending_urls.remove(0);
+                let url = pending_urls.pop_front().unwrap();
                 let client = config.client.clone();
                 let output = output_writer.clone();
                 let progress_clone = progress.clone();
