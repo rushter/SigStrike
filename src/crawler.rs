@@ -9,14 +9,14 @@ use serde::Serialize;
 use std::error::Error;
 use std::path::PathBuf;
 use std::sync::{
-    atomic::{AtomicUsize, Ordering},
     Arc,
+    atomic::{AtomicUsize, Ordering},
 };
 use std::time::Duration;
 use tokio::{
     fs::{File, OpenOptions},
     io::{self, AsyncBufReadExt, AsyncWriteExt, BufReader},
-    sync::{mpsc, Semaphore},
+    sync::{Semaphore, mpsc},
     task::JoinHandle,
 };
 use url::Url;
@@ -344,8 +344,7 @@ async fn fetch_and_process(
                     .and_then(|ct| ct.to_str().ok())
                     .map(String::from);
 
-                if status != StatusCode::OK
-                {
+                if status != StatusCode::OK {
                     // We could also check for content type, but some endpoints return application/json instead
                     // of application/octet-stream.
                     non_matching_count.fetch_add(1, Ordering::Relaxed);
