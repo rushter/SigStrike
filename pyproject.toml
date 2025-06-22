@@ -1,6 +1,6 @@
 [project]
 name = 'sigstrike'
-version = '0.1.1'
+version = '0.1.2'
 description = 'Cobalt Strike beacon crawler and parser.'
 readme = 'README.md'
 requires-python = '>=3.9'
