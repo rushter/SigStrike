@@ -7,6 +7,8 @@ Can crawl 1M of potential beacon URLs in under 10 minutes.
 Parsing logic in based on [dissect.cobaltstrike](https://github.com/fox-it/dissect.cobaltstrike) Python library.
 The library tries to match the output of `dissect.cobaltstrike` so it can be used as a drop-in replacement.
 
+You can read my blog post about it [here](https://rushter.com/blog/threat-hunting-cobalt-strike/).
+
 # Installation
 
 ## Rust CLI using Cargo
