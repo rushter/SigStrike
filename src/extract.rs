@@ -94,6 +94,10 @@ fn find_beacon_offsets(data: &[u8], max_range: usize) -> Vec<usize> {
 }
 
 fn find_config_bytes(data: &[u8], xor_key: u8) -> Option<ParsedBeaconItems> {
+    if data.is_empty() {
+        return None;
+    }
+
     let xorred_config_header = xor(CONFIG_HEADER_PATTERN, xor_key);
     let possible_offsets = needle_in_haystack(data, &xorred_config_header, None);
     for pos in possible_offsets {
@@ -113,6 +117,10 @@ fn find_config_bytes(data: &[u8], xor_key: u8) -> Option<ParsedBeaconItems> {
 }
 
 fn extract_decrypted_beacon(data: &[u8]) -> Option<ParsedBeacon> {
+    if data.is_empty() {
+        return None;
+    }
+
     let beacon_offsets = find_beacon_offsets(data, MAX_OFFSET);
     debug!("Beacon offsets found: {beacon_offsets:?}");
     let shellcode_offsets =
@@ -139,6 +147,10 @@ fn extract_decrypted_beacon(data: &[u8]) -> Option<ParsedBeacon> {
 }
 
 fn extract_unencrypted_beacon(data: &[u8]) -> Option<ParsedBeacon> {
+    if data.is_empty() {
+        return None;
+    }
+
     let config = find_unencrypted_config(data, false);
     if let Some(parsed_config) = config {
         return Some(parsed_config);
@@ -163,6 +175,14 @@ fn extract_unencrypted_beacon(data: &[u8]) -> Option<ParsedBeacon> {
 ///
 pub fn extract_beacon(data: &[u8]) -> std::io::Result<ParsedBeacon> {
     debug!("Starting beacon extraction...");
+
+    if data.is_empty() {
+        return Err(Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "Input data is empty",
+        ));
+    }
+
     let result = extract_decrypted_beacon(data)
         .or_else(|| {
             debug!("No decrypted beacon found, trying unencrypted beacon extraction...");

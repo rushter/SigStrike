@@ -8,7 +8,7 @@ fn read_zip_to_memory(path: &str, password: &str) -> zip::result::ZipResult<Vec<
     let mut result = Vec::new();
 
     for i in 0..archive.len() {
-        let mut file = archive.by_index_decrypt(i, password.as_bytes())?; // password decryption
+        let mut file = archive.by_index_decrypt(i, password.as_bytes())?;
 
         let mut buffer = Vec::new();
         file.read_to_end(&mut buffer)?;
