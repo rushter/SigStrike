@@ -73,7 +73,7 @@ pub async fn crawl(
 
     let producer_handle = spawn_url_producer(input_path, tx).await?;
 
-    process_urls(rx, config, output_writer, progress.clone()).await;
+    process_urls(rx, config, output_writer, progress.clone(), max_concurrent).await;
 
     producer_handle.await?;
     let _ = shutdown_tx.send(()).await;
@@ -242,6 +242,7 @@ async fn process_urls(
     config: CrawlConfig,
     output_writer: Arc<tokio::sync::Mutex<File>>,
     progress: ProgressTracking,
+    max_concurrent: usize,
 ) {
     let mut tasks = FuturesUnordered::new();
 
@@ -256,6 +257,10 @@ async fn process_urls(
             let _permit = permit;
             process_single_url(&client, &url, max_retries, output, progress_clone).await;
         }));
+
+        if tasks.len() >= max_concurrent {
+            tasks.next().await;
+        }
     }
 
     while tasks.next().await.is_some() {}
