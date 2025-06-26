@@ -9,14 +9,14 @@ use serde::Serialize;
 use std::error::Error;
 use std::path::PathBuf;
 use std::sync::{
-    atomic::{AtomicUsize, Ordering},
     Arc,
+    atomic::{AtomicUsize, Ordering},
 };
 use std::time::Duration;
 use tokio::{
     fs::{File, OpenOptions},
     io::{self, AsyncBufReadExt, AsyncWriteExt, BufReader},
-    sync::{mpsc, Semaphore},
+    sync::{Semaphore, mpsc},
     task::JoinHandle,
 };
 use url::Url;
