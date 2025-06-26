@@ -36,7 +36,6 @@ struct CrawlResult {
 
 #[derive(Clone)]
 struct ProgressTracking {
-    total_count: Arc<AtomicUsize>,
     found_count: Arc<AtomicUsize>,
     failed_count: Arc<AtomicUsize>,
     non_matching_count: Arc<AtomicUsize>,
@@ -106,7 +105,6 @@ fn setup_crawl_config(max_concurrent: usize, max_retries: usize, timeout: u64) -
 }
 
 fn setup_progress_tracking(total_lines: usize) -> ProgressTracking {
-    let total_count = Arc::new(AtomicUsize::new(total_lines));
     let found_count = Arc::new(AtomicUsize::new(0));
     let failed_count = Arc::new(AtomicUsize::new(0));
     let non_matching_count = Arc::new(AtomicUsize::new(0));
@@ -121,7 +119,6 @@ fn setup_progress_tracking(total_lines: usize) -> ProgressTracking {
     progress_bar.set_message("Processing URLs - Found: 0, Failed: 0, Non-matching: 0");
 
     ProgressTracking {
-        total_count,
         found_count,
         failed_count,
         non_matching_count,
