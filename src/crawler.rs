@@ -3,20 +3,20 @@ use crate::extract_beacon;
 use crate::utils::generate_checksum;
 use futures::stream::{FuturesUnordered, StreamExt};
 use indicatif::{ProgressBar, ProgressStyle};
-use log::{debug, error, info};
+use log::{debug, error};
 use reqwest::{Client, StatusCode};
 use serde::Serialize;
 use std::error::Error;
 use std::path::PathBuf;
 use std::sync::{
-    atomic::{AtomicUsize, Ordering},
     Arc,
+    atomic::{AtomicUsize, Ordering},
 };
 use std::time::Duration;
 use tokio::{
     fs::{File, OpenOptions},
     io::{self, AsyncBufReadExt, AsyncWriteExt, BufReader},
-    sync::{mpsc, Semaphore},
+    sync::{Semaphore, mpsc},
     task::JoinHandle,
 };
 use url::Url;
@@ -294,16 +294,6 @@ fn finalize_progress_and_print_summary(progress: ProgressTracking) {
         "Completed - Found: {found}, Failed: {failed}, Non-matching: {non_matching}, Unreachable: {unreachable}"
     ));
     progress.progress_bar.finish();
-
-    info!("\nCrawl Summary:");
-    info!(
-        "  Total URLs processed: {}",
-        progress.total_count.load(Ordering::Relaxed)
-    );
-    info!("  Found: {found}");
-    info!("  Failed: {failed}");
-    info!("  Non-matching content type/status: {non_matching}");
-    info!("  Unreachable: {unreachable}");
 }
 
 async fn fetch_and_process(
