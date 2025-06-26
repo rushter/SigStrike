@@ -44,7 +44,7 @@ pub fn process_files(file_paths: Vec<String>, output_path: Option<PathBuf>) -> s
     };
 
     for file in file_paths.iter() {
-        info!("Processing file: {}", file);
+        info!("Processing file: {file}");
         match read_file(file) {
             Ok(beacon) => {
                 info!(
@@ -56,7 +56,7 @@ pub fn process_files(file_paths: Vec<String>, output_path: Option<PathBuf>) -> s
                 file_out.write_all(json.as_bytes())?;
                 file_out.write_all(b"\n")?;
             }
-            Err(e) => error!("Error reading file {}: {}", file, e),
+            Err(e) => error!("Error reading file {file}: {e}"),
         }
     }
     Ok(())

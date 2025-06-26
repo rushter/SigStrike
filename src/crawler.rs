@@ -220,13 +220,13 @@ async fn spawn_url_producer(
                     url.set_path(&checksum);
                     let url_to_send = url.to_string();
                     if tx.send(url_to_send).await.is_err() {
-                        error!("Failed to send URL: {}", line);
+                        error!("Failed to send URL: {line}");
                         break;
                     }
                 }
                 Err(_) => {
                     if tx.send(line.clone()).await.is_err() {
-                        error!("Failed to parse URL: {}", line);
+                        error!("Failed to parse URL: {line}");
                         break;
                     }
                 }

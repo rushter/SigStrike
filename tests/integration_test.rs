@@ -35,15 +35,14 @@ fn test_beacon_extraction() {
             assert!(!files.is_empty(), "No files found in ZIP");
             for (i, content) in files.iter().enumerate() {
                 let result = sigstrike::extract_beacon(content);
-                assert!(result.is_ok(), "Failed to extract beacon from file {}", i);
+                assert!(result.is_ok(), "Failed to extract beacon from file {i}");
                 let beacon = result.unwrap();
                 assert!(
                     beacon.items.len() > 8,
-                    "Extracted beacon data is empty for file {}",
-                    i
+                    "Extracted beacon data is empty for file {i}"
                 );
             }
         }
-        Err(e) => panic!("Error reading ZIP: {:?}", e),
+        Err(e) => panic!("Error reading ZIP: {e:?}"),
     }
 }

@@ -86,7 +86,7 @@ fn find_beacon_offsets(data: &[u8], max_range: usize) -> Vec<usize> {
 
         let decoded_size = (nonce ^ size_bytes) as usize;
         if decoded_size + i + 8 == file_size {
-            debug!("FOUND real_size, iter_nonce_offsets -> {}", i);
+            debug!("FOUND real_size, iter_nonce_offsets -> {i}");
             result.push(i);
         }
     }
@@ -133,7 +133,7 @@ fn extract_decrypted_beacon(data: &[u8]) -> Option<ParsedBeacon> {
 
     let ordered_offsets = order_offsets(&beacon_offsets, &shellcode_offsets);
     for offset in &ordered_offsets {
-        debug!("Beacon offset: {}", offset);
+        debug!("Beacon offset: {offset}");
         let decrypted_data = decrypt_beacon(data, *offset);
         let config = find_encrypted_config(decrypted_data.as_deref(), false);
         if let Some(parsed_config) = config {
@@ -218,7 +218,7 @@ fn find_config_with_data(
 
     for &xor_key in xor_keys {
         if let Some(config_items) = find_config_bytes(data, xor_key) {
-            info!("Found config with xor key: {:#x?}", xor_key);
+            info!("Found config with xor key: {xor_key:#x?}");
             return Some(ParsedBeacon {
                 encrypted: is_encrypted,
                 items: config_items,

@@ -26,11 +26,11 @@ impl BeaconBlob {
                     if !self.advance_offset(&block) {
                         break;
                     }
-                    debug!("Parsed block: {:?}", block);
+                    debug!("Parsed block: {block:?}");
                     result.insert(block.index, block.value);
                 }
                 Err(e) => {
-                    error!("Error parsing block: {}", e);
+                    error!("Error parsing block: {e}");
                     break;
                 }
             };

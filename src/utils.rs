@@ -100,7 +100,7 @@ pub fn vec_to_hex(vec: &[u8]) -> String {
     let slice = trim_null_terminator(vec);
     let mut hex_string = String::with_capacity(slice.len() * 2);
     for byte in slice {
-        let _ = write!(hex_string, "{:02x}", byte);
+        let _ = write!(hex_string, "{byte:02x}");
     }
     hex_string
 }
