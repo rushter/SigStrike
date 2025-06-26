@@ -2,21 +2,21 @@ use crate::datamodel::ParsedBeacon;
 use crate::extract_beacon;
 use crate::utils::generate_checksum;
 use futures::stream::{FuturesUnordered, StreamExt};
-use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use indicatif::{ProgressBar, ProgressStyle};
 use log::{debug, error};
 use reqwest::{Client, StatusCode};
 use serde::Serialize;
 use std::error::Error;
 use std::path::PathBuf;
 use std::sync::{
-    Arc,
     atomic::{AtomicUsize, Ordering},
+    Arc,
 };
 use std::time::Duration;
 use tokio::{
     fs::{File, OpenOptions},
     io::{self, AsyncBufReadExt, AsyncWriteExt, BufReader},
-    sync::{Semaphore, mpsc},
+    sync::{mpsc, Semaphore},
     task::JoinHandle,
 };
 use url::Url;
@@ -40,10 +40,7 @@ struct ProgressTracking {
     found_count: Arc<AtomicUsize>,
     failed_count: Arc<AtomicUsize>,
     non_matching_count: Arc<AtomicUsize>,
-    total_pb: ProgressBar,
-    found_pb: ProgressBar,
-    failed_pb: ProgressBar,
-    non_matching_pb: ProgressBar,
+    progress_bar: ProgressBar,
 }
 
 struct CrawlConfig {
@@ -109,46 +106,27 @@ fn setup_crawl_config(max_concurrent: usize, max_retries: usize, timeout: u64) -
 }
 
 fn setup_progress_tracking(total_lines: usize) -> ProgressTracking {
-    let mp = MultiProgress::new();
     let total_count = Arc::new(AtomicUsize::new(total_lines));
     let found_count = Arc::new(AtomicUsize::new(0));
     let failed_count = Arc::new(AtomicUsize::new(0));
     let non_matching_count = Arc::new(AtomicUsize::new(0));
 
-    let total_pb = create_progress_bar(&mp, "Total URLs:", true);
-    total_pb.set_length(total_lines as u64);
-    let found_pb = create_progress_bar(&mp, "Found:", false);
-    let failed_pb = create_progress_bar(&mp, "Failed:   ", false);
-    let non_matching_pb = create_progress_bar(&mp, "Non-matching:", false);
+    let progress_bar = ProgressBar::new(total_lines as u64);
+    progress_bar.set_style(
+        ProgressStyle::default_bar()
+            .template("{msg}\n[{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
+            .unwrap()
+            .progress_chars("##-"),
+    );
+    progress_bar.set_message("Processing URLs - Found: 0, Failed: 0, Non-matching: 0");
 
     ProgressTracking {
         total_count,
         found_count,
         failed_count,
         non_matching_count,
-        total_pb,
-        found_pb,
-        failed_pb,
-        non_matching_pb,
+        progress_bar,
     }
-}
-
-fn create_progress_bar(mp: &MultiProgress, prefix: &str, show_bar: bool) -> ProgressBar {
-    let pb = mp.add(ProgressBar::new(0));
-    let template = if show_bar {
-        "{prefix:.bold.dim} [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})"
-    } else {
-        "{prefix:.bold.dim} {pos}"
-    };
-
-    pb.set_style(
-        ProgressStyle::default_bar()
-            .template(template)
-            .unwrap()
-            .progress_chars("█▇▆▅▄▃▂▁  "),
-    );
-    pb.set_prefix(prefix.to_string());
-    pb
 }
 
 async fn setup_output_writer(output_path: &PathBuf) -> io::Result<Arc<tokio::sync::Mutex<File>>> {
@@ -187,13 +165,13 @@ fn update_progress_bars(progress: &ProgressTracking) {
     let failed = progress.failed_count.load(Ordering::Relaxed);
     let non_matching = progress.non_matching_count.load(Ordering::Relaxed);
 
-    progress.found_pb.set_position(found as u64);
-    progress.failed_pb.set_position(failed as u64);
-    progress.non_matching_pb.set_position(non_matching as u64);
-
-    // Update total progress based on processed URLs
     let total_processed = found + failed;
-    progress.total_pb.set_position(total_processed as u64);
+    progress.progress_bar.set_position(total_processed as u64);
+
+    let unreachable = failed.saturating_sub(non_matching);
+    progress.progress_bar.set_message(format!(
+        "Processing URLs - Found: {found}, Failed: {failed}, Non-matching: {non_matching}, Unreachable: {unreachable}"
+    ));
 }
 
 async fn spawn_url_producer(
@@ -307,30 +285,25 @@ async fn count_lines_in_file(path: &PathBuf) -> io::Result<usize> {
 }
 
 fn finalize_progress_and_print_summary(progress: ProgressTracking) {
-    progress.total_pb.finish();
-    progress.found_pb.finish();
-    progress.failed_pb.finish();
-    progress.non_matching_pb.finish();
+    let found = progress.found_count.load(Ordering::Relaxed);
+    let failed = progress.failed_count.load(Ordering::Relaxed);
+    let non_matching = progress.non_matching_count.load(Ordering::Relaxed);
+    let unreachable = failed.saturating_sub(non_matching);
+
+    progress.progress_bar.set_message(format!(
+        "Completed - Found: {found}, Failed: {failed}, Non-matching: {non_matching}, Unreachable: {unreachable}"
+    ));
+    progress.progress_bar.finish();
 
     println!("\nCrawl Summary:");
     println!(
         "  Total URLs processed: {}",
         progress.total_count.load(Ordering::Relaxed)
     );
-    println!("  Found: {}", progress.found_count.load(Ordering::Relaxed));
-    println!(
-        "  Failed: {}",
-        progress.failed_count.load(Ordering::Relaxed)
-    );
-    println!(
-        "  Non-matching content type/status: {}",
-        progress.non_matching_count.load(Ordering::Relaxed)
-    );
-    println!(
-        "  Unreachable: {}",
-        (progress.failed_count.load(Ordering::Relaxed)
-            - progress.non_matching_count.load(Ordering::Relaxed))
-    );
+    println!("  Found: {found}");
+    println!("  Failed: {failed}");
+    println!("  Non-matching content type/status: {non_matching}");
+    println!("  Unreachable: {unreachable}");
 }
 
 async fn fetch_and_process(
