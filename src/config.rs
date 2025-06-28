@@ -36,7 +36,7 @@ impl BeaconBlob {
             };
         }
         if result.is_empty() {
-            error!("No valid settings found in beacon data.");
+            debug!("No valid settings found in beacon data.");
         }
         result
     }
