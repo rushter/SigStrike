@@ -253,15 +253,15 @@ fn iter_guardrail_configs(data: &[u8], xor_key: u8) -> Vec<GuardrailMetadata> {
 }
 
 fn iter_guardrail_configs_with_beacon(data: &[u8]) -> Option<GuardrailResult> {
-    for grconfig in iter_guardrail_configs(data, 0x8a) {
+    for gr_config in iter_guardrail_configs(data, 0x8a) {
         let guarded_config =
-            utils::xor_single_byte(&grconfig.masked_beacon_config, grconfig.beacon_xor_key);
+            utils::xor_single_byte(&gr_config.masked_beacon_config, gr_config.beacon_xor_key);
 
         for xorkey in XorKeyCandidateIterator::new(&guarded_config) {
             let unguarded = utils::xor_bytes(&guarded_config, &xorkey);
             let checksum = payload_checksum(&unguarded) + 1;
 
-            if grconfig.checksum == checksum {
+            if gr_config.checksum == checksum {
                 let xor_string = String::from_utf8_lossy(&xorkey);
                 debug!(
                     "payload checksum: 0x{:08x} for xorkey: {:02x?}",
