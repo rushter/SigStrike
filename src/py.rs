@@ -1,11 +1,13 @@
 use crate::{cli, extract};
+use crate::{cli, extract};
+use crate::{cli, extract};
+use crate::{cli, extract};
 use std::path::PathBuf;
 
 /// This module provides a Python interface for extracting Cobalt Strike beacons from binary data.
 ///
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
-
 
 /// extract_beacon(data)
 /// --
@@ -20,9 +22,13 @@ fn extract_beacon(data: &[u8]) -> PyResult<String> {
     match result {
         Ok(value) => match serde_json::to_string(&value) {
             Ok(json) => Ok(json),
-            Err(e) => Err(PyValueError::new_err(format!("Error serializing to JSON: {e}"))),
+            Err(e) => Err(PyValueError::new_err(format!(
+                "Error serializing to JSON: {e}"
+            ))),
         },
-        Err(e) => Err(PyValueError::new_err(format!("Beacon extraction failed: {e}"))),
+        Err(e) => Err(PyValueError::new_err(format!(
+            "Beacon extraction failed: {e}"
+        ))),
     }
 }
 
