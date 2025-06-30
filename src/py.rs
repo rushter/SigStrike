@@ -1,7 +1,4 @@
 use crate::{cli, extract};
-use crate::{cli, extract};
-use crate::{cli, extract};
-use crate::{cli, extract};
 use std::path::PathBuf;
 
 /// This module provides a Python interface for extracting Cobalt Strike beacons from binary data.
