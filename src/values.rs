@@ -11,7 +11,6 @@ use std::net::Ipv4Addr;
 use std::string::String;
 
 #[derive(Debug, Serialize)]
-#[allow(dead_code)]
 #[serde(untagged)]
 pub enum ValueType {
     Short(u16),
