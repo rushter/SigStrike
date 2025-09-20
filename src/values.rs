@@ -220,6 +220,12 @@ pub fn parse_transform_binary(
                     "Transform argument length exceeds maximum allowed size",
                 ));
             }
+            if length as usize > bytes.len() - cursor.position() as usize {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Transform argument length exceeds available data",
+                ));
+            }
             let mut arg = vec![0u8; length as usize];
             cursor.read_exact(&mut arg)?;
             let arg = bytes_to_string(&arg);
@@ -359,6 +365,9 @@ fn parse_process_injection_transform_steps(data: &[u8]) -> Vec<(String, Transfor
         if length > 5000 {
             return Err("Transform argument length exceeds maximum allowed size");
         };
+        if length as usize > cursor.get_ref().len() - cursor.position() as usize {
+            return Err("Transform argument length exceeds available data");
+        }
         let mut arg = vec![0u8; length as usize];
         if cursor.read_exact(&mut arg).is_err() {
             return Err("Failed to read transform argument data");
