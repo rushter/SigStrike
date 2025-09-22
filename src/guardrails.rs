@@ -27,14 +27,6 @@ enum GuardOption {
     PayloadChecksum = 9,
 }
 
-#[repr(u16)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
-enum SettingsType {
-    None = 0,
-    Short = 1,
-    Int = 2,
-    Ptr = 3,
-}
 
 #[derive(Debug, Clone)]
 struct GuardrailSetting {
