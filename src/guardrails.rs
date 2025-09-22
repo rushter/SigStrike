@@ -27,7 +27,6 @@ enum GuardOption {
     PayloadChecksum = 9,
 }
 
-
 #[derive(Debug, Clone)]
 struct GuardrailSetting {
     option: GuardOption,
