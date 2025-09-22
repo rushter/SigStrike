@@ -9,7 +9,7 @@ repository = "https://github.com/rushter/SigStrike"
 homepage = "https://github.com/rushter/SigStrike"
 keywords = ["cobalt_strike", "beacon", "crawler", "parser"]
 authors = ["Artem Golubin <me@rushter.com>"]
-rust-version = "1.87.0"
+rust-version = "1.90.0"
 
 [dependencies]
 log = "0.4.27"
