@@ -1,5 +1,7 @@
 # SigStrike
 
+![PyPI - Version](https://img.shields.io/pypi/v/sigstrike)
+
 A fast Cobalt Strike beacon parser.
 Parses 1000 beacon under 1 second.
 Can crawl 1M of potential beacon URLs in under 10 minutes.
