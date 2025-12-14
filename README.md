@@ -1,6 +1,7 @@
 # SigStrike
 
-![PyPI - Version](https://img.shields.io/pypi/v/sigstrike)
+[![PyPI - Version](https://img.shields.io/pypi/v/sigstrike?logo=pypi&label=Pypi&logoColor=fff)](https://pypi.org/project/sigstrike/)
+
 
 A fast Cobalt Strike beacon parser.
 Parses 1000 beacon under 1 second.
