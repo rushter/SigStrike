@@ -1,0 +1,7 @@
+include *.md
+include Cargo.toml
+include Cargo.lock
+global-include py.typed
+recursive-include src *.rs
+recursive-include tests *.rs
+recursive-include fuzz *.rs
