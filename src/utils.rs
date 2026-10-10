@@ -43,7 +43,7 @@ pub fn get_most_common_xor_keys(data: &[u8]) -> Vec<u8> {
     let default_keys: HashSet<u8> = DEFAULT_XOR_KEYS.iter().copied().collect();
 
     let mut freq_vec: Vec<(u8, usize)> = byte_counts.into_iter().collect();
-    freq_vec.sort_unstable_by(|a, b| b.1.cmp(&a.1));
+    freq_vec.sort_unstable_by_key(|b| std::cmp::Reverse(b.1));
 
     freq_vec
         .into_iter()

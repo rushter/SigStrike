@@ -85,14 +85,14 @@ pub fn parse_beacons(input_path: PathBuf, output_path: Option<PathBuf>) {
     if input_path.is_file() {
         let files: Vec<String> = Vec::from([input_str_path.clone()]);
         if let Err(e) = process_files(files, output_path) {
-            error!("Error processing file {}: {}", &input_str_path, e);
+            error!("Error processing file {}: {}", input_str_path, e);
         }
     } else if input_path.is_dir() {
         let files = list_files(&input_str_path);
         info!(
             "Found {} files in directory: {}",
             files.len(),
-            &input_str_path
+            input_str_path
         );
         if files.is_empty() {
             error!("No files found in directory: {input_str_path}");
@@ -100,13 +100,13 @@ pub fn parse_beacons(input_path: PathBuf, output_path: Option<PathBuf>) {
         if let Err(e) = process_files(files, output_path) {
             error!(
                 "Error processing files in directory {}: {}",
-                &input_str_path, e
+                input_str_path, e
             );
         }
     } else {
         error!(
             "Input path is neither a file nor a directory: {}",
-            &input_str_path
+            input_str_path
         );
     };
 }

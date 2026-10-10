@@ -130,7 +130,7 @@ impl<'a> XorKeyCandidateIterator<'a> {
         }
 
         let mut counts: Vec<_> = counter.into_iter().collect();
-        counts.sort_by(|a, b| b.1.cmp(&a.1));
+        counts.sort_by_key(|b| std::cmp::Reverse(b.1));
 
         let mut candidates = Vec::new();
         let mut first_count = 0;
@@ -256,7 +256,7 @@ fn iter_guardrail_configs_with_beacon(data: &[u8]) -> Option<GuardrailResult> {
                 let xor_string = String::from_utf8_lossy(&xorkey);
                 debug!(
                     "payload checksum: 0x{:08x} for xorkey: {:02x?}",
-                    checksum, &xor_string
+                    checksum, xor_string
                 );
                 return Some(GuardrailResult {
                     beacon_data: unguarded,
