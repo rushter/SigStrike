@@ -116,6 +116,11 @@ pub fn xor_single_byte(data: &[u8], key: u8) -> Vec<u8> {
 }
 
 pub fn xor_bytes(a: &[u8], b: &[u8]) -> Vec<u8> {
+    // An empty key is a no-op rather than a modulo-by-zero.
+    if b.is_empty() {
+        return a.to_vec();
+    }
+
     if b.len() >= a.len() {
         a.iter().zip(b.iter()).map(|(&x, &y)| x ^ y).collect()
     } else {
