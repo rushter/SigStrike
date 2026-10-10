@@ -192,7 +192,12 @@ fn iter_guardrail_configs(data: &[u8], xor_key: u8) -> Vec<GuardrailMetadata> {
             debug!("Found guardrail config at offset: {offset}");
 
             let guard_config_offset = offset + 6;
-            let beacon_config_offset = guard_config_offset.saturating_sub(BEACON_CONFIG_PATCH_SIZE);
+            // Without the full beacon config patch before it, there is nothing to unmask.
+            let Some(beacon_config_offset) =
+                guard_config_offset.checked_sub(BEACON_CONFIG_PATCH_SIZE)
+            else {
+                continue;
+            };
 
             if beacon_config_offset + BEACON_CONFIG_PATCH_SIZE + GUARD_PATCH_SIZE <= data.len() {
                 let masked_beacon_config = data
