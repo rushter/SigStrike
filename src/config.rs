@@ -23,11 +23,12 @@ impl BeaconBlob {
         loop {
             match self.parse_next_block() {
                 Ok(block) => {
-                    if !self.advance_offset(&block) {
+                    debug!("Parsed block: {block:?}");
+                    let length = block.length;
+                    result.insert(block.index, block.value);
+                    if !self.advance_offset(length) {
                         break;
                     }
-                    debug!("Parsed block: {block:?}");
-                    result.insert(block.index, block.value);
                 }
                 Err(e) => {
                     error!("Error parsing block: {e}");
@@ -63,8 +64,8 @@ impl BeaconBlob {
         })
     }
 
-    fn advance_offset(&mut self, block: &SettingsBlock) -> bool {
-        self.current_offset += 6 + block.length as usize;
+    fn advance_offset(&mut self, length: u16) -> bool {
+        self.current_offset += 6 + length as usize;
 
         if self.current_offset + 2 <= self.data.len() {
             let next_bytes = &self.data[self.current_offset..self.current_offset + 2];
