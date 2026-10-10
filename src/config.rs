@@ -31,7 +31,9 @@ impl BeaconBlob {
                 }
                 Err(e) => {
                     error!("Error parsing block: {e}");
-                    break;
+                    if !self.skip_block() {
+                        break;
+                    }
                 }
             };
         }
@@ -77,6 +79,28 @@ impl BeaconBlob {
             debug!("Reached end of beacon data.");
             return false;
         }
+        true
+    }
+
+    /// Advances past a block that could not be parsed, so one bad setting does
+    /// not discard the rest of the config.
+    fn skip_block(&mut self) -> bool {
+        let bytes = self.get_offset();
+
+        let skip = if bytes.len() >= 6 {
+            6 + u16::from_be_bytes([bytes[4], bytes[5]]) as usize
+        } else {
+            bytes.len()
+        };
+
+        let next_offset = self.current_offset + skip;
+
+        if next_offset + 6 > self.data.len() {
+            debug!("Reached end of beacon data while skipping block.");
+            return false;
+        }
+
+        self.current_offset = next_offset;
         true
     }
 }
