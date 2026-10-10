@@ -1,4 +1,4 @@
-use bitflags::{bitflags, bitflags_match};
+use bitflags::bitflags;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct BeaconProtocol(u16);
@@ -17,17 +17,20 @@ bitflags! {
 
 impl BeaconProtocol {
     pub fn to_values(self) -> Vec<String> {
-        // iter_names is not working for some reason
-        let mut flag_names: Vec<String> = Vec::new();
-        bitflags_match!(self, {
-            BeaconProtocol::HTTP => flag_names.push("HTTP".to_string()),
-            BeaconProtocol::DNS => flag_names.push("DNS".to_string()),
-            BeaconProtocol::SMB => flag_names.push("SMB".to_string()),
-            BeaconProtocol::TCP => flag_names.push("TCP".to_string()),
-            BeaconProtocol::HTTPS => flag_names.push("HTTPS".to_string()),
-            BeaconProtocol::BIND => flag_names.push("BIND".to_string()),
-            _ => flag_names.push("Unknown".to_string()),
-        });
-        flag_names
+        // HTTP is the zero-valued flag, so iter_names yields nothing for it.
+        if self == BeaconProtocol::HTTP {
+            return vec!["HTTP".to_string()];
+        }
+
+        let names: Vec<String> = self
+            .iter_names()
+            .map(|(name, _)| name.to_string())
+            .collect();
+
+        if names.is_empty() {
+            vec!["Unknown".to_string()]
+        } else {
+            names
+        }
     }
 }
