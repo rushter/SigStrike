@@ -41,33 +41,24 @@ pub fn decrypt_beacon(data: &[u8], offset: usize) -> Option<Vec<u8>> {
     let start_i = 2 + offset / 4;
     let end_i = (data.len() / 4) - 4;
 
-    let mut decoded_data = Vec::with_capacity(1024);
-
-    for i in start_i..end_i {
-        let pos_a = i * 4;
-        let pos_b = i * 4 + 4;
-
-        if pos_b + 3 >= data.len() {
-            break;
-        }
-
-        let a = u32::from_le_bytes([
-            data[pos_a],
-            data[pos_a + 1],
-            data[pos_a + 2],
-            data[pos_a + 3],
-        ]) ^ key;
-
-        let b = u32::from_le_bytes([
-            data[pos_b],
-            data[pos_b + 1],
-            data[pos_b + 2],
-            data[pos_b + 3],
-        ]) ^ key;
-
-        let c = a ^ b;
-        decoded_data.extend_from_slice(&c.to_le_bytes());
+    if start_i >= end_i {
+        return Some(Vec::new());
     }
+
+    // c = (a ^ key) ^ (b ^ key) for consecutive 4-byte words a and b, so the
+    // key cancels out and only a ^ b is stored. Decoding into a preallocated
+    // buffer keeps the loop free of bounds checks and per-word reallocation.
+    let mut decoded_data = vec![0u8; (end_i - start_i) * 4];
+
+    let left = data.chunks_exact(4).skip(start_i);
+    let right = data[4..].chunks_exact(4).skip(start_i);
+
+    for (out_word, (a, b)) in decoded_data.chunks_exact_mut(4).zip(left.zip(right)) {
+        let a = u32::from_le_bytes(a.try_into().unwrap()) ^ key;
+        let b = u32::from_le_bytes(b.try_into().unwrap()) ^ key;
+        out_word.copy_from_slice(&(a ^ b).to_le_bytes());
+    }
+
     Some(decoded_data)
 }
 
@@ -241,4 +232,108 @@ fn find_encrypted_config(
 
 fn find_unencrypted_config(data: &[u8], all_xor_keys: bool) -> Option<ParsedBeacon> {
     find_config_with_data(Some(data), all_xor_keys, false)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::decrypt_beacon;
+
+    /// Reference implementation of the previous index-based decode loop.
+    fn decrypt_beacon_reference(data: &[u8], offset: usize) -> Option<Vec<u8>> {
+        if offset + 16 >= data.len() {
+            return None;
+        }
+
+        let key = u32::from_le_bytes([
+            data[offset],
+            data[offset + 1],
+            data[offset + 2],
+            data[offset + 3],
+        ]);
+        let size = u32::from_le_bytes([
+            data[offset + 4],
+            data[offset + 5],
+            data[offset + 6],
+            data[offset + 7],
+        ]) ^ key;
+
+        if size == 0 {
+            return None;
+        }
+
+        let start_i = 2 + offset / 4;
+        let end_i = (data.len() / 4) - 4;
+
+        let mut decoded_data = Vec::with_capacity(1024);
+
+        for i in start_i..end_i {
+            let pos_a = i * 4;
+            let pos_b = i * 4 + 4;
+
+            if pos_b + 3 >= data.len() {
+                break;
+            }
+
+            let a = u32::from_le_bytes([
+                data[pos_a],
+                data[pos_a + 1],
+                data[pos_a + 2],
+                data[pos_a + 3],
+            ]) ^ key;
+
+            let b = u32::from_le_bytes([
+                data[pos_b],
+                data[pos_b + 1],
+                data[pos_b + 2],
+                data[pos_b + 3],
+            ]) ^ key;
+
+            decoded_data.extend_from_slice(&(a ^ b).to_le_bytes());
+        }
+
+        Some(decoded_data)
+    }
+
+    #[test]
+    fn decrypt_beacon_matches_reference() {
+        // Exhaustive over both length and offset to cover the 4-byte word
+        // alignment and the range boundaries of the decode loop.
+        for len in 8..=200usize {
+            let data: Vec<u8> = (0..len).map(|i| (i * 7 + 3) as u8).collect();
+            for offset in 0..len {
+                assert_eq!(
+                    decrypt_beacon(&data, offset),
+                    decrypt_beacon_reference(&data, offset),
+                    "mismatch at len {len}, offset {offset}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn decrypt_beacon_matches_reference_on_samples() {
+        use std::fs::File;
+        use std::io::Read;
+        use zip::read::ZipArchive;
+
+        let file = File::open("tests/data/beacons.zip").unwrap();
+        let mut archive = ZipArchive::new(file).unwrap();
+
+        for i in 0..archive.len() {
+            let mut entry = archive.by_index_decrypt(i, b"infected").unwrap();
+            let mut content = Vec::new();
+            entry.read_to_end(&mut content).unwrap();
+            if content.is_empty() {
+                continue;
+            }
+
+            for offset in (0..64).chain((0..1024usize).step_by(97)) {
+                assert_eq!(
+                    decrypt_beacon(&content, offset),
+                    decrypt_beacon_reference(&content, offset),
+                    "mismatch in file {i} at offset {offset}"
+                );
+            }
+        }
+    }
 }
