@@ -53,20 +53,7 @@ pub fn get_most_common_xor_keys(data: &[u8]) -> Vec<u8> {
 }
 
 pub fn xor(data: &[u8], key: u8) -> Vec<u8> {
-    let mut result = Vec::with_capacity(data.len());
-
-    const CHUNK_SIZE: usize = 32;
-    let mut chunk = [0u8; CHUNK_SIZE];
-
-    for chunks in data.chunks(CHUNK_SIZE) {
-        let len = chunks.len();
-        for i in 0..len {
-            chunk[i] = chunks[i] ^ key;
-        }
-        result.extend_from_slice(&chunk[..len]);
-    }
-
-    result
+    data.iter().map(|&b| b ^ key).collect()
 }
 
 pub fn trim_null_terminator(bytes: &[u8]) -> Vec<u8> {
