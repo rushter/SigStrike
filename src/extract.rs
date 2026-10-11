@@ -50,12 +50,17 @@ pub fn decrypt_beacon(data: &[u8], offset: usize) -> Option<Vec<u8>> {
     // buffer keeps the loop free of bounds checks and per-word reallocation.
     let mut decoded_data = vec![0u8; (end_i - start_i) * 4];
 
-    let left = data.chunks_exact(4).skip(start_i);
-    let right = data[4..].chunks_exact(4).skip(start_i);
+    let left = data.as_chunks::<4>().0.iter().skip(start_i);
+    let right = data[4..].as_chunks::<4>().0.iter().skip(start_i);
 
-    for (out_word, (a, b)) in decoded_data.chunks_exact_mut(4).zip(left.zip(right)) {
-        let a = u32::from_le_bytes(a.try_into().unwrap()) ^ key;
-        let b = u32::from_le_bytes(b.try_into().unwrap()) ^ key;
+    for (out_word, (a, b)) in decoded_data
+        .as_chunks_mut::<4>()
+        .0
+        .iter_mut()
+        .zip(left.zip(right))
+    {
+        let a = u32::from_le_bytes(*a) ^ key;
+        let b = u32::from_le_bytes(*b) ^ key;
         out_word.copy_from_slice(&(a ^ b).to_le_bytes());
     }
 
